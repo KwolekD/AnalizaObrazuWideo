@@ -7,7 +7,7 @@ Stan na 2026-11-19 (krok 6 w `detect_objects`, `max_extra` = 3 px). Odpowiedzi i
 | plik | co to |
 |---|---|
 | `Lab4_detekcja.ipynb` | część 1: detekcja i segmentacja larw mącznika + analiza instancji (długość, kształt I/C/S). **Gotowa**, główny przedmiot pracy. |
-| `Lab4_Hough.ipynb` | część 2: bile i bandy snookera transformacją Hougha. Ma podsumowanie (sekcja 6); w sesji, w której powstał ten plik, nie była ruszana. |
+| `Lab4_Hough.ipynb` | część 2: bile i bandy snookera transformacją Hougha. Przebudowana 2026-11-19, opis na końcu tego pliku („Część 2”). |
 | `Lab4_teoria/Amodal_...pdf` | artykuł Dolata i in., IEEE Access 2025. Kroki 1–5 potoku z części 1 odwzorowują sekcję **III-B2c** (segmentacja instancji). Krok 6 to rozszerzenie. |
 | `Lab4_teoria/*.ipynb`, `Lab4_teoria_Hough.pdf` | materiały prowadzącego (morfologia, momenty, Hough). |
 | `Lab4_dane/` | `proc_*112112426*` = `calib` (dobór parametrów), `proc_*112219030*` = `test`; `mcgill*`, `trump`, `zhao` = część 2. |
@@ -16,7 +16,7 @@ Stan na 2026-11-19 (krok 6 w `detect_objects`, `max_extra` = 3 px). Odpowiedzi i
 ## Uruchamianie i sprawdzanie
 
 - Python tylko z `.venv` w katalogu głównym repo: `.venv/Scripts/python.exe`. Systemowego `python` nie ma w PATH, `pandas` nie ma w `.venv`.
-- Wykonanie całości: `.venv/Scripts/jupyter-nbconvert.exe --to notebook --execute --inplace lab_4/Lab4_detekcja.ipynb`. Trwa ok. 100 s (przebiegi progu globalnego i `alpha` liczą też krok 6). Ścieżki do danych są względne wobec `lab_4/`, a nbconvert sam ustawia ten katalog.
+- Wykonanie całości: `.venv/Scripts/jupyter-nbconvert.exe --to notebook --execute --inplace lab_4/Lab4_detekcja.ipynb`. Trwa ok. 100 s (przebieg `alpha` liczy też krok 6). Ścieżki do danych są względne wobec `lab_4/`, a nbconvert sam ustawia ten katalog.
 - Notatnik z wyjściami ma ok. 34 MB. Nie czytaj go narzędziem Read: źródła i wyjścia tekstowe wyciągaj skryptem (`json.load` → `cells[i]['source']`, `outputs`). Indeksy komórek się zmieniają, więc szukaj komórek po początku źródła.
 - Tabela ablacji kroku 6 jest wyświetlana przez `display(Markdown(...))`. Przy porównywaniu wyjść czytaj też `outputs[*]['data']['text/markdown']`, nie tylko strumienie.
 - Oczekiwane wyniki po wykonaniu:
@@ -55,11 +55,10 @@ Kolejność sekcji:
 1. obszar roboczy (przycięcie `FLOOR`),
 2. „Potok detekcji”: jedna krótka tabela (krok → funkcja → artykuł → parametry końcowe), bez opisów kroków, bo te są w sekcjach kroków. Osobnej sekcji „Odstępstwa od artykułu” już nie ma (usunięta przez użytkownika), odstępstwa są opisane w sekcjach kroków,
 3. łatwy RoI,
-4. kroki 1 / 2 / 3–4 / 5 z eksperymentami (pełna detekcja `objs_*`, `dbg_*` jest liczona w sekcji kroku 5). Eksperyment `max_extra`: historia reguły (2 końce → nadmiar 30 → nadmiar 3), histogram, galeria larw z małą wypustką (przy 30 px przyjmowanych) z wynikiem końcowym,
-5. krok 6: wynik (galerie zlepków i oczyszczonych larw), ablacja po jednym parametrze jako krótka tabela liczb z galerią zmian przyjmowanych tylko bez zabezpieczeń, tabela „Uzasadnienie wartości końcowych”, wniosek. Eksperyment „czy wypustki usuwa binaryzacja albo erozja B” usunięty na prośbę użytkownika (mówi o tym ustnie), wyniki są niżej w „Decyzjach”,
+4. kroki 1 / 2 / 3–4 / 5 z eksperymentami (pełna detekcja `objs_*`, `dbg_*` jest liczona w sekcji kroku 5). Eksperyment `max_extra`: reguła końcowa, jedno zdanie o wcześniejszych wersjach (2 końce, przycinanie gałązek, nadmiar 30), histogram, galeria larw z małą wypustką (przy 30 px przyjmowanych) z wynikiem końcowym,
+5. krok 6: wynik (galerie zlepków i oczyszczonych larw), ablacja po jednym parametrze jako krótka tabela liczb z galerią zmian przyjmowanych tylko bez zabezpieczeń, tabela „Uzasadnienie wartości końcowych”, krótki wniosek (3 punkty; szczegóły parametrów są tylko w tabeli). Eksperyment „czy wypustki usuwa binaryzacja albo erozja B” usunięty na prośbę użytkownika (mówi o tym ustnie), wyniki są niżej w „Decyzjach”,
 6. wyniki dla `calib` i `test` (z analizą strat),
-7. wrażliwość wyniku na próg globalny, skrócona na prośbę użytkownika: tabela i wykres dla progów 60–160 oraz krótki wniosek,
-8. analiza instancji: `analyze_instance` / `analyze_objects` (długość i kształt I/C/S), potem „Długość w klasach kształtu” (prośba użytkownika 2026-11-19, zastąpiła galerię wszystkich larw `calib`): tabela statystyk długości (min, Q1, mediana, Q3, max, średnia, std) dla każdej klasy na `calib` i `test`, wykres pudełkowy (wąsy = min i max) i galeria `show_length_examples`: po 5 larw na klasę (pozycje min, Q1, mediana, Q3, max w klasie posortowanej po długości), każda jako para RGB (zielony kontur) + maska, z niebieską linią środkową i żółtymi końcami, wycinki w jednej skali. Dalej walidacja na syntetycznych larwach, histogram długości `calib` vs `test`. Grubość i eksperyment „siła erozji brzegu a pomiar” usunięte na prośbę użytkownika (2026-11-19): polecenie wymaga dwóch miar. Grubość (`width_est`) zostaje tylko jako cecha filtra w kroku 5.
+7. analiza instancji: `analyze_instance` / `analyze_objects` (długość i kształt I/C/S), potem „Długość w klasach kształtu” (prośba użytkownika 2026-11-19, zastąpiła galerię wszystkich larw `calib`): tabela statystyk długości (min, Q1, mediana, Q3, max, średnia, std) dla każdej klasy na `calib` i `test`, wykres pudełkowy (wąsy = min i max) i galeria `show_length_examples`: po 5 larw na klasę (pozycje min, Q1, mediana, Q3, max w klasie posortowanej po długości), każda jako para RGB (zielony kontur) + maska, z niebieską linią środkową i żółtymi końcami, wycinki w jednej skali. Dalej walidacja na syntetycznych larwach, histogram długości `calib` vs `test`. Grubość i eksperyment „siła erozji brzegu a pomiar” usunięte na prośbę użytkownika (2026-11-19): polecenie wymaga dwóch miar. Grubość (`width_est`) zostaje tylko jako cecha filtra w kroku 5.
 
 ## Decyzje z uzasadnieniem (nie zmieniać bez nowego eksperymentu)
 
@@ -69,7 +68,7 @@ Kolejność sekcji:
   - Dla marginesu 20–60 px wynik jest identyczny. 20 px to najmniejsza wartość, przy której żaden obiekt na `calib` ani `test` nie dotyka brzegu, więc `krawedz` działa już tylko na RoI.
   - Larwa wspinająca się po lewej ściance `test` @(3, 82) odpada przez `grubosc` (1.32×), bo maska łapie cień na ściance. Krok 6 zdejmuje cień przy progu 180, ale zostaje 92% maski, mniej niż `min_cover`.
   - Wszystkie współrzędne „w układzie przyciętego obrazu” (RoI, powiększenia, @(x, y) w markdownie) są liczone od tego poszerzonego prostokąta.
-- **`S_THR` = Otsu na `calib` = 104.** Na `calib` wynik jest identyczny dla 60–110, na `test` dla 90–104 (przy 110 +1). Wyżej bilans: +2 do +4 na `calib`, −2 do +1 na `test`.
+- **`S_THR` = Otsu na `calib` = 104.** Sekcję „Wrażliwość wyniku na próg globalny” użytkownik usunął z notatnika (2026-11-19); nie przywracać i nie odwoływać się do niej w markdownie. Wnioski z niej (zostają tylko tutaj): na `calib` wynik jest identyczny dla 60–110, na `test` dla 90–104 (przy 110 +1). Wyżej bilans: +2 do +4 na `calib`, −2 do +1 na `test`.
 - **`min_area` = 1500.** Leży w pustej przerwie rozkładu pól komponentów (ok. 960 → 1730 px).
 - **`K_GROW` (ograniczenie lokalnego progu).** Przy 104 nie zmienia wyniku, ale przy wyższym progu globalnym jest konieczne: bez niego przy 130 na `test` przybywają 2 larwy zamiast 6, bo lokalny Otsu (ok. 110) z powrotem skleja larwy rozdzielone w masce wstępnej (pomiar sprzed przeniesienia kroku 6 do potoku).
 - **Usunięte: dwa otwarcia 3×3** (po progu globalnym i po erozji). Przy progach 70–110 nic nie zmieniały.
@@ -113,9 +112,14 @@ Kolejność sekcji:
 - **Ablacja w całym zakresie:** sprawdzaj operację w całym zakresie parametrów, nie tylko w punkcie pracy. Ablacja `K_GROW` wyłącznie przy 104 dała błędny wniosek.
 - **Uzasadnienie parametrów krótko** (prośba użytkownika): tabela liczb + tabela „parametr → co się dzieje przy innych wartościach”, bez długich list współrzędnych w wydrukach.
 - **Biblioteki:** używaj gotowych funkcji OpenCV / skimage / scipy. Własny kod pisz tylko tam, gdzie biblioteki nie mają odpowiednika, np. przy adaptacyjnej erozji z artykułu.
-- **Styl markdownu:** pierwsza osoba („dobieram”, „sprawdzam”), zwięźle, wnioski oparte na liczbach.
+- **Styl markdownu:** pierwsza osoba („dobieram”, „sprawdzam”), zwięźle, wnioski oparte na liczbach. Uwagi użytkownika z 2026-11-19 (przegląd całego notatnika):
+  - opisuj wersję końcową; wcześniejsze wersje najwyżej jednym zdaniem, bez historii „pierwsza / druga / trzecia wersja”,
+  - opis nad wykresem/galerią to 1–2 zdania legendy, bez rozpisywania każdego koloru i panelu,
+  - wniosek nie opowiada przykładu, który jest pokazany tuż nad nim (np. zlepek przy `k_len`): liczby + jedno zdanie,
+  - ten sam fakt (np. blada larwa @(3546, 1129), „lepiej zgubić larwę niż zapisać złą maskę”) opisuj w jednym miejscu, a gdzie indziej co najwyżej odwołaniem,
+  - wniosek nie powtarza tabeli uzasadnień parametrów (krok 6).
 - **Nazewnictwo:** krok 1 to „binaryzacja wstępna”, a jego wynik to „maska wstępna” / „kontur wstępny” (w kodzie `rough_mask`, `rough`). Nie wracać do „maski zgrubnej”.
-- **Liczby w markdownie są wpisane ręcznie.** Po każdej zmianie parametru wykonaj notatnik, porównaj wyjścia tekstowe przed i po, i popraw wszystkie liczby, które się zmieniły. Chodzi o wnioski z kroków 1, 2, 3–4, 5 i 6, tabelę „Uzasadnienie wartości końcowych”, tabelę „Wyniki detekcji i dlaczego część larw się zgubiła”, wnioski o wrażliwości na próg i „Wnioski z analizy”.
+- **Liczby w markdownie są wpisane ręcznie.** Po każdej zmianie parametru wykonaj notatnik, porównaj wyjścia tekstowe przed i po, i popraw wszystkie liczby, które się zmieniły. Chodzi o wnioski z kroków 1, 2, 3–4, 5 i 6, tabelę „Uzasadnienie wartości końcowych”, tabelę „Wyniki detekcji i dlaczego część larw się zgubiła” i „Wnioski z analizy”.
 - Eksperyment z kroku 1 (próg a maska wstępna) nie ma już `print` (usunął go użytkownik). Liczby z wniosku kroku 1 widać tylko na wykresach, więc sprawdzaj je skryptem.
 - **Kolory decyzji** (prośba użytkownika, 2026-11-19): na wyniku końcowym w każdej wizualizacji zielony kontur = przyjęty, czerwony = odrzucony. Stałe `ACCEPT_RGB` / `REJECT_RGB` są w komórce z `display_objects`. Czerwieni i zieleni nie używać do niczego innego przy konturach i nakładkach: ścieżka szkieletu jest niebieska, wypełnienia instancji losowane z odcieni cyjan–fiolet, części w kroku 6 rozróżnia wypełnienie (`SPLIT_FILLS`), biały kontur to maska z kroku 5, a kontur części ma kolor decyzji (`show_splits(..., accepted=False)` dla podziałów odrzuconych). Wyjątek zostawiony świadomie: `show_erosion` (zieleń = maska po erozji, prośba użytkownika). Galeria klas kształtu nie koloruje już linii środkowej klasą (wiersz galerii = klasa).
 - **Wizualizacja erozji** (prośba użytkownika): maska po erozji jako półprzezroczysta zieleń, kontur maski z kroku 3 na niebiesko (`find_contours(local, 0.5)`, czyli po granicy pikseli). Pas między nimi to piksele zdjęte. Nie zaznaczać usuniętych pikseli magentą. Funkcja `show_erosion` jest w komórce eksperymentu kroków 3–4. `show_candidate_steps` ma wciąż panel z magentą; jego ostatni panel ma kontur w kolorze decyzji.
@@ -132,3 +136,28 @@ Kolejność sekcji:
   - ciemna larwa w `calib` ok. @(3308, 1716) ma S ≈ 98, czyli tuż pod progiem,
   - jasne larwy tuż po wylince mają niskie S.
 - Brak skali na zdjęciach, więc wszystkie pomiary są w pikselach.
+
+## Część 2: `Lab4_Hough.ipynb` (stan na 2026-11-19)
+
+Wykonanie: `.venv/Scripts/jupyter-nbconvert.exe --to notebook --execute --inplace lab_4/Lab4_Hough.ipynb`, ok. 15 s. Notatnik ma ok. 11 MB, więc wyjścia też czytaj skryptem.
+
+Sekcje: 1. obszar stołu → 2. przetwarzanie wstępne → 3. linie (3.1 start, 3.2 `threshold`/`theta`, 3.3 przetwarzanie końcowe) → 4. okręgi (4.1 start, 4.2 promień, 4.3 `param2`/`param1`, 4.4 `minDist`/`dp`, 4.5 przetwarzanie końcowe) → 5. `detect` + wynik na obrazach kalibracyjnych → 6. demonstracja `trump`, `zhao` → 7. podsumowanie.
+
+Wymagania użytkownika (nie zmieniać):
+- **Eksperymenty i kalibracja tylko na `mcgill` i `mcgill2`.** `trump` i `zhao` pojawiają się dopiero w demonstracji. Nie pisać, że coś „sprawdzono na wszystkich czterech obrazach”.
+- **Przycięcie `TABLE` = (40:1056, 20:1900)** to stały prostokąt ustawiony ręcznie, ten sam dla każdego obrazu, a nie dopasowywany do obrazu. Obejmuje stół z ramą (na `mcgill`/`mcgill2` rama kończy się na x ≈ 30 / 1884, y ≈ 50 / 1046) i ok. 10 px zapasu. Współrzędne w notatniku są w układzie przyciętego obrazu.
+- **Banda = ciemna linia między dwoma zielonymi pasami** (wierzch bandy i sukno pola gry), a nie granica drewno/sukno. Na lewej i prawej bandzie linia ma 6–7 px, na górnej i dolnej 4–5 px.
+- **Przetwarzanie wstępne ma tylko pokazać efekt** (wymóg zadania), bez eksperymentów w notatniku. Parametry dobierane skryptami poza notatnikiem.
+- Detektor krawędzi: w lab 2 (nie lab 3) badany był tylko Canny z rozmyciem; najlepszy był Gauss 9×9 na zaszumionych monetach. Tu jest Gauss 5×5, bo kadry mają mało szumu, a 9×9 zlewa szczeliny w trójkącie bil i osłabia bandę.
+
+Decyzje z uzasadnieniem:
+- **L\* + Gauss 5×5 + Canny 20/40.** Przy 30/60 dolna banda `mcgill2` prawie znika (ciemna linia jest ciemniejsza od sukna tylko o ok. 15 poziomów L\*). Dolny próg = połowa górnego jak w Cannym wewnątrz `HoughCircles`, więc `param1` = 40 daje tę samą mapę krawędzi. Skala szarości: brzeg czerwonej bili pokryty krawędzią w ok. 80% obwodu, w L\* w ok. 97%.
+- **Linie: `rho` = 1, `theta` = 0.25°, `threshold` = 300.** Najsłabsza banda ma 470 głosów (prawa w `mcgill`). Przy 1° nachylone bandy (0.25–0.5°) rozpraszają głosy. Przy 500 w `mcgill` znika lewa i prawa banda.
+- **Przetwarzanie końcowe linii** (`select_cushions`): odchylenie < 5° → pas 15% przy brzegu (działa 8.4–23.6%: bandy vs linia baulk) → sukno ≥ 0.5 po obu stronach prostej, 8 px od niej (brzeg ramy 0/0, granica drewno/sukno ok. 0.85/0, banda ok. 0.85/0.85) → średnia ważona głosami prostych do 10 px od najsilniejszej (`group_lines`, `mean_line`). Średnia, bo najsilniejsza krawędź bywa raz wewnętrzną, raz zewnętrzną krawędzią ciemnej linii (lewa banda: 85 px w `mcgill`, 79 px w `mcgill2`). Średnia leży w medianie < 1 px od minimum jasności linii (pomiar skryptem). Sama liczba głosów wybierałaby niespójne krawędzie.
+- **Okręgi: `dp` = 1, `minDist` = 15, `param1` = 40, `param2` = 15, promień 7–18.** Zakresy bez zmiany wyniku (16/16 i 22/22, 0 fałszywych): `param2` 12–19, `minDist` 8–22, `param1` 20–90, dolna granica promienia 4–9, górna 14–22. Promień 9 był na krawędzi (przy 10 ginie środkowa bila trójkąta). Każda bila ma w mapie krawędzi dwa pierścienie (r ≈ 13–15 i r ≈ 9–10 px), stąd dopasowane promienie 9.1–16.3 px.
+- Ocena okręgów względem `GT_BALLS` (ręcznie sprawdzone środki bil w układzie przyciętego obrazu), trafienie = środek < 8 px.
+- **Przetwarzanie końcowe okręgów:** środek ≥ `CUSHION_MARGIN` = 6 px w głąb pola gry od każdej bandy. Okręgi łuz najbliżej −2.3 px, bile najbliżej +17.9 px. Wszystkie odrzucone okręgi to łuzy (14–17 na obraz, 2–4 na łuzę).
+
+Oczekiwane wyniki: `mcgill` 16 bil (z 30 okręgów TH), `mcgill2` 22 (z 39), `trump` 12 (z 27), `zhao` 22 (z 39); na każdym 4 bandy. Bile policzone ręcznie: 16 / 22 (15 czerwonych + 7) / 12 / 22.
+
+Liczby w markdownie są wpisane ręcznie, jak w części 1: po zmianie parametru porównaj wyjścia i popraw opisy w sekcjach 3–4 i podsumowaniu.
