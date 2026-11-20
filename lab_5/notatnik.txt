@@ -1,0 +1,26 @@
+zdjęcia ? 
+
+warunki:
+- scena musi być statyczna
+- scena musi być płaska
+- za tydzień na wykładzie / w teori do listy
+
+można z innego detektora lub metody matchowania (?)
+sid jest całkiem niezly w praktyce
+
+mamy 2 etapowy detektor z obrazu pixeli dostajemy jakiś rzadki zbiór punktów które sa istotne
+punkty jako krawędzie sa trudne bo punkty sa takie same wzdłuż krawędzi bardoz podobne
+
+framework z sift, sprawdzić 
+
+w 1 parametry
+a w 2 stabilność detektora, czyli zmiana obrazu typu przesunięcie, skala, powinniśmy oczekiwać: 
+- ekwiwariancja czyli zmiana punktów taka sama jak transformacja
+- deskryptorów inwariancja, czyli takie same wektory - minimalne inne
+
+3 zbadanie czy inwariancja nastepuje poprzez znalezienie par, 
+przygotowanie in zynierskiego frameworku do zszywania zdjęć, workperspective funkcja
+na 2 sposoby: 
+- naklejenie, zdjęcie bazowe i jakieś offsety? nie robić overlapu czyli te inne zdjęcia przysłoniają obraz pod spodem
+- chcemy zobaczyć czy jest dobrze więc robimy - alfa blending, obraz źródłowy i przekształcony i sumujemy z wagami
+
